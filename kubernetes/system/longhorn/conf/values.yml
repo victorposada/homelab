@@ -1,0 +1,9 @@
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  host: longhorn.scadrial.lan
+  tls: true
+  secureBackends: true
+  annotations:
+    cert-manager.io/cluster-issuer: "selfsigned-cluster-issuer"
+  tlsSecret: longhorn.local-tls
