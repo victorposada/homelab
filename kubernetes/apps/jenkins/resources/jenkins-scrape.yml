@@ -1,0 +1,9 @@
+- job_name: "jenkins"
+  metrics_path: /prometheus/
+  scrape_interval: 300s
+  scrape_timeout: 30s
+  scheme: https
+  tls_config:
+    insecure_skip_verify: true
+  static_configs:
+  - targets: ["jenkins.jenkins.svc.cluster.local:9090"]

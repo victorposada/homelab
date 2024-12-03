@@ -6,5 +6,5 @@ helm repo update
 helm upgrade --install \
     --create-namespace \
     --namespace ingress-nginx \
-    ingress-nginx ingress-nginx/ingress-nginx
+    ingress-nginx ingress-nginx/ingress-nginx -f conf/values.yml
 

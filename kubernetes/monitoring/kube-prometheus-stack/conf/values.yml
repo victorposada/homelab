@@ -1,0 +1,46 @@
+alertmanager:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "selfsigned-cluster-issuer"
+    hosts:
+      - alertmanager.scadrial.lan
+    tls:
+      - secretName: alertmanager-general-tls
+        hosts:
+        - alertmanager.scadrial.lan
+    
+grafana:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "selfsigned-cluster-issuer"
+    hosts:
+      - grafana.scadrial.lan
+    tls:
+      - secretName: grafana-general-tls
+        hosts:
+        - grafana.scadrial.lan
+
+prometheus:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "selfsigned-cluster-issuer"
+    hosts:
+      - prometheus.scadrial.lan
+    tls:
+      - secretName: prometheus-general-tls
+        hosts:
+        - prometheus.scadrial.lan
+  prometheusSpec:
+    additionalScrapeConfigs:
+      - job_name: "jenkins"
+        metrics_path: /prometheus
+        scheme: http
+        static_configs:
+        - targets: ["jenkins.jenkins.svc.cluster.local:8080"]
+
