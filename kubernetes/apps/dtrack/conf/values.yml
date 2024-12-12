@@ -1,0 +1,10 @@
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: "selfsigned-cluster-issuer"
+  hostname: "dtrack.scadrial.lan"
+  ingressClassName: "nginx"
+  tls: 
+  - secretName: dt-tls
+    hosts:
+      - dtrack.scadrial.lan
