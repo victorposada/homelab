@@ -1,0 +1,12 @@
+---
+- name: Status
+  hosts: all
+  become: true
+  become_method: su
+  tasks:
+  - name: Ping
+    ping: 
+  - name: Test root
+    command: ls /root
+  - name: Swap
+    command: /usr/sbin/swapoff -a

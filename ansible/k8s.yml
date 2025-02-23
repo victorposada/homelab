@@ -1,0 +1,157 @@
+---
+- hosts: all
+  become: true
+  become_method: su
+  tasks: 
+    - name: Update apt repository
+      apt: 
+        update_cache=yes 
+        force_apt_get=yes 
+        cache_valid_time=3600
+      tags: update
+
+    - name: Upgrade apt repository
+      apt: 
+        upgrade=dist 
+        force_apt_get=yes
+      tags: update
+
+    - name: Install utils
+      apt:
+        name: 
+          - apt-transport-https 
+          - ca-certificates 
+          - curl
+          - gnupg
+        state: latest
+        update_cache: true
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/debian bookworm stable
+        state: present
+
+    - name: Agregar clave GPG del repositorio de Google
+      apt_key:
+        url: https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key
+        state: present
+
+    - name: Agregar repositorio de Google para Kubernetes
+      apt_repository:
+        repo: "deb https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /"
+        state: present
+
+    - name: Update apt repository
+      apt: 
+        update_cache=yes 
+        force_apt_get=yes 
+        cache_valid_time=3600
+      tags: update
+
+    - name: Install containerd.io
+      apt:
+        name:
+          - nftables
+          - netbase
+          - containerd.io
+          - kubelet
+          - kubeadm  
+          - kubectl
+        state: latest
+        update_cache: true
+    
+    - name: Disable swap
+      shell: |
+          swapoff -a 
+          sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+    - name: Create containerd config
+      shell: containerd config default > /etc/containerd/config.toml
+
+
+    - name: Set SystemdCgroup to true in containerd config
+      ansible.builtin.replace:
+        path: /etc/containerd/config.toml
+        regexp: 'SystemdCgroup = false'
+        replace: 'SystemdCgroup = true'
+      
+    - name: Add modules
+      ansible.builtin.copy:
+        content: |
+          overlay
+          br_netfilter
+        dest: /etc/modules-load.d/containerd.conf
+
+    - name: Read containerd modules
+      ansible.builtin.shell:
+        cmd: cat /etc/modules-load.d/containerd.conf
+      register: modules
+
+    - name: Load containerd modules
+      ansible.builtin.command:
+        cmd: "modprobe {{ item }}"
+      with_items: "{{ modules.stdout_lines }}"
+
+    - name: Add network rules
+      ansible.builtin.copy:
+        content: |
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.bridge.bridge-nf-call-iptables = 1
+          net.ipv4.ip_forward = 1
+        dest: /etc/sysctl.d/kubernetes.conf
+
+    - name: Read network rules
+      ansible.builtin.shell:
+        cmd: cat /etc/sysctl.d/kubernetes.conf
+      register: rules
+
+    - name: Load network rules
+      command: sysctl --system
+
+    - name: Restart containerd
+      ansible.builtin.systemd_service:
+        name: containerd.service
+        state: restarted
+
+    - name: Add /usr/sbin to the PATH in ~/.bashrc
+      lineinfile:
+        path: "~/.bashrc"
+        line: 'export PATH=$PATH:/usr/sbin'
+        create: yes
+        state: present
+
+- hosts: master
+  become: yes
+  become_method: su
+  tasks: 
+    - name: Init cluster
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address={{ ansible_ssh_host }}
+
+    - name: Get the token for joining the worker nodes
+      become: yes
+      shell: kubeadm token create  --print-join-command
+      register: kubernetes_join_command
+
+    - name: Copy join command to local file.
+      become: no
+      local_action: copy content="{{ kubernetes_join_command.stdout_lines[0] }}" dest="/tmp/kube_join"
+
+- hosts: nodes
+  become: yes
+  become_method: su
+  tasks: 
+    - name: Copy join command
+      become: yes
+      copy:
+        src: /tmp/kube_join
+        dest: /tmp/kube_join
+        mode: 0777
+
+    - name: Join the Worker nodes to the cluster.
+      become: yes
+      command: sh /tmp/kube_join

@@ -1,0 +1,15 @@
+[master]
+192.168.1.201
+
+[nodes]
+192.168.1.202
+192.168.1.203
+192.168.1.204
+
+[k8s:children]
+master
+nodes
+
+[k8s:vars]
+ansible_user=hoid
+ansible_ssh_private_key_file=~/.ssh/homelab

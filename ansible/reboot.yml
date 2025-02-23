@@ -1,0 +1,8 @@
+---
+- name: Status
+  hosts: all
+  become: true
+  become_method: su
+  tasks:
+  - name: Reboot
+    reboot:
