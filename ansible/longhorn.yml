@@ -1,0 +1,27 @@
+---
+- hosts: all
+  become: true
+  become_method: su
+  tasks: 
+    - name: Update apt repository
+      apt: 
+        update_cache=yes 
+        force_apt_get=yes 
+        cache_valid_time=3600
+      tags: update
+
+    - name: Upgrade apt repository
+      apt: 
+        upgrade=dist 
+        force_apt_get=yes
+      tags: update
+
+    - name: Install utils
+      apt:
+        name: 
+          - open-iscsi
+        state: latest
+        update_cache: true
+
+    - name: Check status
+      command: modprobe iscsi_tcp
