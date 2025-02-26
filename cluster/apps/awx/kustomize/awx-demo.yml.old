@@ -1,10 +1,9 @@
+---
 apiVersion: awx.ansible.com/v1beta1
 kind: AWX
 metadata:
   name: awx-demo
-  namespace: awx-helm
+  namespace: awx
 spec:
-  admin_user: admin
-  service_type: nodeport
-  postgres_security_context_settings:
   postgres_data_volume_init: true
+  service_type: nodeport

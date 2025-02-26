@@ -1,4 +1,0 @@
-customVolumes:
-  postgres:
-    enabled: true
-    accesModes: ReadWriteMany
