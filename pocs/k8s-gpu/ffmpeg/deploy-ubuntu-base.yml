@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubuntu-gpu-deployment
+spec:
+  selector:
+    matchLabels:
+      name: amdgpu-dp-ds
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: amdgpu-dp-ds
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        gpu: amd
+      containers:
+        - name: ubuntu
+          image: ubuntu:20.04
+          command: ["sleep", "infinity"]  # Keeps the container running
+          resources:
+            limits:
+              amd.com/gpu: 1  # Request 1 GPU
