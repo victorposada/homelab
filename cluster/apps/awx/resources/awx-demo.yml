@@ -5,6 +5,13 @@ metadata:
   namespace: awx-helm
 spec:
   admin_user: admin
-  service_type: nodeport
-  postgres_security_context_settings:
+  service_type: ClusterIP
   postgres_data_volume_init: true
+  ingress_type: ingress
+  ingress_host:
+    - hostname: awx.scadrial.lan
+    - hostname: awx.scadrial.lan
+      tls_secret: tls-secret
+  ingress_annotations: |
+    environment: testing
+  ingress_controller: ingress-nginx
